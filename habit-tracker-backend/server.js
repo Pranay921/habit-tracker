@@ -25,6 +25,16 @@ app.use('/api/auth', authRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/users', userRoutes);
 
+
+// Serve static files from frontend
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

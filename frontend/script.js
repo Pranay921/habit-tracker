@@ -1,5 +1,6 @@
  // script.js
-const API_BASE_URL = 'http://localhost:5000';
+
+const API_BASE_URL = window.location.origin;
 let currentUser = null;
 let habits = [];
 let currentView = 'auth';
