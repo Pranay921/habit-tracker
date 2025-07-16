@@ -1,0 +1,14 @@
+{
+  "name": "habit-tracker-frontend",
+  "version": "1.0.0",
+  "description": "Daily Habit Tracker Frontend",
+  "main": "index.html",
+  "scripts": {
+    "start": "echo 'No build script needed for static HTML'"
+  },
+  "dependencies": {
+    "tailwindcss": "^2.2.19",
+    "chart.js": "^3.7.0",
+    "font-awesome": "^6.0.0-beta3"
+  }
+}

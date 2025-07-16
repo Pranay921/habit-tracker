@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Habit Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f9fafb;
+            --text-color: #1f2937;
+            --header-bg: #ffffff;
+            --card-bg: #ffffff;
+            --input-bg: #ffffff;
+            --input-border: #d1d5db;
+        }
+        .dark-theme {
+            --bg-color: #1f1f1f;
+            --text-color: #f9fafb;
+            --header-bg: #111827;
+            --card-bg: #1f1f1f;
+            --input-bg: #374151;
+            --input-border: #4b5563;
+        }
+        html {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        header, .bg-white {
+            background-color: var(--card-bg) !important;
+            transition: background-color 0.3s ease;
+        }
+        input, select, textarea {
+            background-color: var(--input-bg) !important;
+            border-color: var(--input-border) !important;
+            color: var(--text-color) !important;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+        button {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Main Container -->
+    <div id="app" class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <div id="sidebar" class="w-64 bg-white shadow-lg hidden md:block">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold text-blue-600 mb-8">
+                    <i class="fas fa-chart-line mr-2"></i>HabitTracker
+                </h1>
+                <nav class="space-y-2">
+                    <button onclick="showView('dashboard')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-home mr-3"></i>Dashboard
+                    </button>
+                    <button onclick="showView('tracker')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-calendar mr-3"></i>Tracker
+                    </button>
+                    <button onclick="showView('stats')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-chart-bar mr-3"></i>Stats
+                    </button>
+                    <button onclick="showView('profile')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-user mr-3"></i>Profile
+                    </button>
+                    <button onclick="logout()" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 transition-colors text-red-600">
+                        <i class="fas fa-sign-out-alt mr-3"></i>Logout
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center">
+                        <button onclick="toggleSidebar()" class="md:hidden mr-4">
+                            <i class="fas fa-bars text-gray-600"></i>
+                        </button>
+                        <h2 id="page-title" class="text-xl font-semibold text-gray-800">Dashboard</h2>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="showAddHabitModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Add Habit
+                        </button>
+                        <button id="theme-toggle" onclick="toggleTheme()" class="text-gray-600 focus:outline-none">
+                            <i id="theme-toggle-icon" class="fas fa-moon"></i>
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-600">Welcome, <span id="user-name">User</span></span>
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Views -->
+            <main class="flex-1 p-6">
+                <!-- Authentication View -->
+                <div id="auth-view" class="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
+                    <div class="text-center mb-8">
+                        <i class="fas fa-chart-line text-6xl text-blue-600 mb-4"></i>
+                        <h1 class="text-3xl font-bold text-gray-800">HabitTracker</h1>
+                        <p class="text-gray-600 mt-2">Track your daily habits and build consistency</p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <div class="flex mb-4">
+                            <button onclick="setAuthMode('login')" id="login-btn" class="flex-1 py-2 font-medium text-blue-600 border-b-2 border-blue-600">Login</button>
+                            <button onclick="setAuthMode('signup')" id="signup-btn" class="flex-1 py-2 font-medium text-gray-500">Sign Up</button>
+                        </div>
+                        
+                        <form id="auth-form" class="space-y-4">
+                            <div id="name-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                <input type="text" id="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your email">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your password">
+                            </div>
+                            <button type="submit" id="auth-submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">Login</button>
+                        </form>
+                        
+                        <div id="auth-error" class="mt-4 text-red-600 text-sm hidden"></div>
+                        <div class="mt-4 text-center">
+                            <a href="#" class="text-sm text-blue-600 hover:underline">Forgot Password?</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard View -->
+                <div id="dashboard-view" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Habit Cards will be dynamically added here -->
+                    </div>
+                </div>
+
+                <!-- Tracker View -->
+                <div id="tracker-view" class="hidden">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-semibold">Habit Tracker</h3>
+                            <div class="flex space-x-2">
+                                <button onclick="setTrackerView('daily')" id="daily-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Daily</button>
+                                <button onclick="setTrackerView('weekly')" id="weekly-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">Weekly</button>
+                            </div>
+                        </div>
+                        <div id="calendar-container">
+                            <!-- Calendar will be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats View -->
+                <div id="stats-view" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-semibold mb-6">Habit Statistics</h3>
+                            <div class="space-y-6">
+                                <div class="text-center">
+                                    <div class="text-4xl font-bold text-blue-600" id="current-streak">0</div>
+                                    <div class="text-gray-600">Current Streak</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-4xl font-bold text-green-600" id="longest-streak">0</div>
+                                    <div class="text-gray-600">Longest Streak</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-4xl font-bold text-purple-600" id="completion-rate">0%</div>
+                                    <div class="text-gray-600">Completion Rate</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-semibold mb-6">Progress Chart</h3>
+                            <canvas id="stats-chart" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile View -->
+                <div id="profile-view" class="hidden">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-6">Profile & Settings</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                                <input type="text" id="profile-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Enter your name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input type="email" id="profile-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Enter your email">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                <input type="password" id="profile-password" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Leave blank to keep current password">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                                <input type="password" id="profile-confirm-password" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Confirm new password">
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="notifications" class="mr-2">
+                                <label for="notifications" class="text-gray-700">Enable email notifications</label>
+                            </div>
+                            <div class="flex space-x-4">
+                                <button onclick="saveProfile()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Save Changes</button>
+                                <button onclick="confirmDeleteAccount()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Delete Account</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Habit Modal -->
+    <div id="habit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-xl font-semibold">Add New Habit</h3>
+                <button onclick="closeHabitModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="habit-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Habit Name</label>
+                    <input type="text" id="habit-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Enter habit name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Time of Day</label>
+                    <select id="habit-time" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        <option value="morning">Morning</option>
+                        <option value="afternoon">Afternoon</option>
+                        <option value="evening">Evening</option>
+                        <option value="night">Night</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
+                    <select id="habit-frequency" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        <option value="daily">Daily</option>
+                        <option value="weekdays">Weekdays</option>
+                        <option value="weekends">Weekends</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="habit-reminder" class="mr-2">
+                    <label for="habit-reminder" class="text-gray-700">Enable reminders</label>
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Save</button>
+                    <button type="button" onclick="closeHabitModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4">
+            <div class="text-center">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Delete Account</h3>
+                <p class="text-gray-600 mb-6">Are you sure you want to delete your account? This action cannot be undone.</p>
+                <div class="flex space-x-4">
+                    <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
+                    <button onclick="deleteAccount()" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
